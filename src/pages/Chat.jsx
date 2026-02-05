@@ -15,7 +15,7 @@ const Chat = () => {
             hasInitialized.current = true;
             addMessage(location.state.initialQuery, 'user');
             // Mock AI response for the initial query
-            setTimeout(() => streamResponse(), 500);
+            setTimeout(() => fetchResponse(location.state.initialQuery), 500);
             // Clear state so it doesn't re-trigger on refresh if we don't want to
             window.history.replaceState({}, document.title);
         }
@@ -27,42 +27,69 @@ const Chat = () => {
 
     const handleSendMessage = (text) => {
         addMessage(text, 'user');
-        setTimeout(() => streamResponse(), 500);
+        fetchResponse(text);
     };
 
-    const streamResponse = () => {
+    const fetchResponse = async (userMessage) => {
         setIsStreaming(true);
-        const mockResponse = "This is a simulated AI response. In a real application, this would be connected to a backend retrieval system. I can answer questions about the documentation you've uploaded.";
-        let currentText = "";
-        let index = 0;
-
         // Add a placeholder message for AI
-        setMessages(prev => [...prev, { text: "", sender: 'ai', id: Date.now() + 1, isStreaming: true }]);
+        const aiMessageId = Date.now() + 1;
+        setMessages(prev => [...prev, { text: "...", sender: 'ai', id: aiMessageId, isStreaming: true }]);
 
-        const interval = setInterval(() => {
-            if (index < mockResponse.length) {
-                currentText += mockResponse[index];
-                setMessages(prev => {
-                    const newMessages = [...prev];
-                    const lastMsg = newMessages[newMessages.length - 1];
-                    if (lastMsg.sender === 'ai' && lastMsg.isStreaming) {
-                        lastMsg.text = currentText;
-                    }
-                    return newMessages;
-                });
-                index++;
-                scrollToBottom();
-            } else {
-                clearInterval(interval);
-                setIsStreaming(false);
-                setMessages(prev => {
-                    const newMessages = [...prev];
-                    const lastMsg = newMessages[newMessages.length - 1];
-                    lastMsg.isStreaming = false; // Done streaming
-                    return newMessages;
-                });
+        try {
+            const response = await fetch('http://localhost:8080/api/v1/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    // 'User-Agent': 'insomnia/12.3.0' // Browsers set User-Agent automatically, usually can't be overridden safely
+                },
+                body: JSON.stringify({
+                    message: userMessage
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
             }
-        }, 30); // Typing speed
+
+            const data = await response.json();
+            // Assuming the API returns { message: "response text" } or similar. 
+            // Check the actual response structure. 
+            // If the user said "message": "내 이름은?" in the request, logic suggests the answer is in a field.
+            // Let's assume 'answer' or 'message' or just the whole body if it's text.
+            // Based on common practices, let's try to find the text field.
+            // If the user provided CURL shows response, I would know. 
+            // I'll assume 'answer' or 'response' or 'message'. 
+            // Let's dump the whole JSON if unsure or pick a likely field.
+            // For now, let's assume the response has a 'message' or 'answer' field.
+            // If data is just a string, use it.
+
+            const aiText = data.answer || data.message || JSON.stringify(data);
+
+            setMessages(prev => {
+                const newMessages = [...prev];
+                const lastMsg = newMessages.find(m => m.id === aiMessageId);
+                if (lastMsg) {
+                    lastMsg.text = aiText;
+                    lastMsg.isStreaming = false;
+                }
+                return newMessages;
+            });
+
+        } catch (error) {
+            console.error("Error fetching chat response:", error);
+            setMessages(prev => {
+                const newMessages = [...prev];
+                const lastMsg = newMessages.find(m => m.id === aiMessageId);
+                if (lastMsg) {
+                    lastMsg.text = "죄송합니다. 서버와 통신 중 오류가 발생했습니다.";
+                    lastMsg.isStreaming = false;
+                }
+                return newMessages;
+            });
+        } finally {
+            setIsStreaming(false);
+        }
     };
 
     const scrollToBottom = () => {
