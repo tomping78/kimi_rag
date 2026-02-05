@@ -66,15 +66,8 @@ const Chat = () => {
 
             const aiText = data.answer || data.message || JSON.stringify(data);
 
-            setMessages(prev => {
-                const newMessages = [...prev];
-                const lastMsg = newMessages.find(m => m.id === aiMessageId);
-                if (lastMsg) {
-                    lastMsg.text = aiText;
-                    lastMsg.isStreaming = false;
-                }
-                return newMessages;
-            });
+            // Start typing simulation instead of setting text immediately
+            simulateTyping(aiText, aiMessageId);
 
         } catch (error) {
             console.error("Error fetching chat response:", error);
@@ -87,9 +80,50 @@ const Chat = () => {
                 }
                 return newMessages;
             });
-        } finally {
             setIsStreaming(false);
         }
+    };
+
+    const simulateTyping = (fullText, messageId) => {
+        let index = 0;
+        let currentText = "";
+
+        // Initial clear of the "..." placeholder
+        setMessages(prev => {
+            const newMessages = [...prev];
+            const lastMsg = newMessages.find(m => m.id === messageId);
+            if (lastMsg) {
+                lastMsg.text = "";
+            }
+            return newMessages;
+        });
+
+        const interval = setInterval(() => {
+            if (index < fullText.length) {
+                currentText += fullText[index];
+                setMessages(prev => {
+                    const newMessages = [...prev];
+                    const targetMsg = newMessages.find(m => m.id === messageId);
+                    if (targetMsg) {
+                        targetMsg.text = currentText;
+                    }
+                    return newMessages;
+                });
+                index++;
+                scrollToBottom();
+            } else {
+                clearInterval(interval);
+                setIsStreaming(false);
+                setMessages(prev => {
+                    const newMessages = [...prev];
+                    const targetMsg = newMessages.find(m => m.id === messageId);
+                    if (targetMsg) {
+                        targetMsg.isStreaming = false;
+                    }
+                    return newMessages;
+                });
+            }
+        }, 30); // Typing speed
     };
 
     const scrollToBottom = () => {
