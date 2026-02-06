@@ -14,6 +14,7 @@ const Hologram = () => {
         const cx = size / 2;
         const cy = size / 2;
 
+        let animationFrameId;
         let time = 0;
 
         // Configuration for the blobs
@@ -27,8 +28,10 @@ const Hologram = () => {
             ctx.fillStyle = blob.color;
             ctx.beginPath();
 
-            // Draw a distorted circle using sine waves
-            for (let i = 0; i <= 360; i++) {
+            // Optimize: Draw fewer segments (every 5 degrees instead of 1)
+            // 360 / 5 = 72 segments, visually similar but much faster
+            const step = 5;
+            for (let i = 0; i <= 360; i += step) {
                 const angle = (i * Math.PI) / 180;
 
                 // Create organic distortion
@@ -64,11 +67,15 @@ const Hologram = () => {
             // Reset blend mode
             ctx.globalCompositeOperation = 'source-over';
 
-            requestAnimationFrame(animate);
+            animationFrameId = requestAnimationFrame(animate);
         };
 
         animate();
 
+        // Cleanup function to prevent zombie loops
+        return () => {
+            cancelAnimationFrame(animationFrameId);
+        };
     }, []);
 
     return (
