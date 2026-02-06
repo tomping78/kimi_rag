@@ -42,8 +42,8 @@
   border-radius: 50px !important;
 }
 
-.chat-area input {
-  padding: 2rem !important
+.chat-area textarea {
+  padding: 2rem 7rem 2rem 2rem !important
 }
 
 /* Custom Scrollbar */
@@ -84,4 +84,38 @@
   display: none !important;
   width: 0;
   height: 0;
+}
+
+/* .syntax-box div {
+  background: #fff !important
+} */
+
+/* Blinking Cursor for Streaming */
+@keyframes cursor-blink {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0;
+  }
+}
+
+.streaming-result>*:not(.syntax-box):last-child::after,
+.streaming-result>.syntax-box:last-child div::after {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 16px;
+  background-color: #a1a1aa;
+  /* zinc-400 */
+  vertical-align: sub;
+  margin-left: 2px;
+  animation: cursor-blink 1s step-end infinite;
+}
+
+.streaming-result>.syntax-box:last-child div::after {
+  vertical-align: text-bottom;
 }

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import InputBar from '../components/InputBar';
 import Tooltip from '../components/Tooltip';
+import MarkdownRenderer from '../components/MarkdownRenderer';
 
 const Chat = () => {
     const location = useLocation();
@@ -191,9 +192,8 @@ const Chat = () => {
                                     )}
                                 </div>
                             )}
-                            <div className="leading-relaxed whitespace-pre-wrap">
-                                {msg.text}
-                                {msg.isStreaming && <span className="inline-block w-2 h-4 ml-1 align-middle bg-zinc-400 animate-pulse" />}
+                            <div className="leading-relaxed">
+                                <MarkdownRenderer content={msg.text} isStreaming={msg.isStreaming} />
                             </div>
                         </div>
                     </div>

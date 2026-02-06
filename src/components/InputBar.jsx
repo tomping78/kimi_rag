@@ -15,6 +15,14 @@ const InputBar = ({ onSubmit, isLoading }) => {
         }
     }, [isLoading]);
 
+    // Auto-resize textarea
+    useEffect(() => {
+        if (inputRef.current) {
+            inputRef.current.style.height = 'auto';
+            inputRef.current.style.height = `${inputRef.current.scrollHeight}px`;
+        }
+    }, [inputValue]);
+
     const handleSubmit = () => {
         if (!inputValue.trim() || isLoading) return;
         if (onSubmit) {
@@ -37,15 +45,16 @@ const InputBar = ({ onSubmit, isLoading }) => {
                 <div className="relative flex items-center bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-xl chat-area">
 
                     {/* Input Field */}
-                    <input
+                    <textarea
                         ref={inputRef}
-                        type="text"
                         value={inputValue}
                         onChange={(e) => setInputValue(e.target.value)}
                         onKeyDown={handleKeyDown}
                         placeholder={isLoading ? "Generating response..." : "Ask anything..."}
                         disabled={isLoading}
-                        className="w-full bg-transparent text-black dark:text-white px-6 py-4 md:py-5 outline-none placeholder-zinc-400 dark:placeholder-zinc-500 text-lg disabled:cursor-not-allowed"
+                        rows={1}
+                        className="w-full bg-transparent text-black dark:text-white px-6 py-4 md:py-5 outline-none placeholder-zinc-400 dark:placeholder-zinc-500 text-lg disabled:cursor-not-allowed resize-none overflow-hidden"
+                        style={{ minHeight: '60px' }} // Approx height of single line with padding
                     />
 
                     {/* Action Buttons */}
