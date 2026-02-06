@@ -53,18 +53,21 @@ const Chat = () => {
             }
 
             const data = await response.json();
-            // Assuming the API returns { message: "response text" } or similar. 
-            // Check the actual response structure. 
-            // If the user said "message": "내 이름은?" in the request, logic suggests the answer is in a field.
-            // Let's assume 'answer' or 'message' or just the whole body if it's text.
-            // Based on common practices, let's try to find the text field.
-            // If the user provided CURL shows response, I would know. 
-            // I'll assume 'answer' or 'response' or 'message'. 
-            // Let's dump the whole JSON if unsure or pick a likely field.
-            // For now, let's assume the response has a 'message' or 'answer' field.
-            // If data is just a string, use it.
+            console.log("API Response:", data); // Debug log to check structure
 
-            const aiText = data.answer || data.message || JSON.stringify(data);
+            // User requested to only show the "answer" field.
+            // Based on debugging, the structure is data.result.answer
+            let aiText = "";
+            if (data.result && data.result.answer) {
+                aiText = data.result.answer;
+            } else if (data.answer) {
+                aiText = data.answer;
+            } else if (data.message) {
+                aiText = data.message;
+            } else {
+                console.warn("Field 'answer' not found in response.", data);
+                aiText = "죄송합니다. 답변을 불러올 수 없습니다.";
+            }
 
             // Start typing simulation instead of setting text immediately
             simulateTyping(aiText, aiMessageId);
@@ -137,7 +140,7 @@ const Chat = () => {
     return (
         <div className="flex flex-col h-screen pt-20 pb-6 px-4 max-w-3xl mx-auto">
             {/* Chat History */}
-            <div className="flex-1 overflow-y-auto space-y-6 pb-4 scrollbar-hide">
+            <div className="flex-1 overflow-y-auto space-y-6 pb-4">
                 {messages.map((msg, idx) => (
                     <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
                         <div className={`max-w-[80%] rounded-2xl px-5 py-3 ${msg.sender === 'user'
@@ -145,7 +148,15 @@ const Chat = () => {
                             : 'text-black dark:text-white'
                             }`}>
                             {msg.sender === 'ai' && (
-                                <div className="font-bold text-sm mb-1 text-blue-600 dark:text-blue-400">KIMI</div>
+                                <div className="font-bold text-sm mb-1 text-blue-600 dark:text-blue-400 flex items-center gap-2">
+                                    KIMI
+                                    {msg.text === "..." && msg.isStreaming && (
+                                        <svg className="animate-spin h-3 w-3 text-blue-600 dark:text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                    )}
+                                </div>
                             )}
                             <div className="leading-relaxed whitespace-pre-wrap">
                                 {msg.text}
@@ -164,9 +175,8 @@ const Chat = () => {
                 <div ref={bottomRef} />
             </div>
 
-            {/* Input Wrapper */}
             <div className="mt-4">
-                <InputBar onSubmit={handleSendMessage} />
+                <InputBar onSubmit={handleSendMessage} isLoading={isStreaming} />
             </div>
         </div>
     );

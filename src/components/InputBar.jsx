@@ -1,10 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 
-const InputBar = ({ onSubmit }) => {
+const InputBar = ({ onSubmit, isLoading }) => {
     const [inputValue, setInputValue] = useState('');
+    const inputRef = useRef(null);
+
+    // Auto-focus input when loading completes
+    useEffect(() => {
+        if (!isLoading) {
+            // slightly delayed focus to ensure re-enable has processed
+            setTimeout(() => {
+                inputRef.current?.focus();
+            }, 10);
+        }
+    }, [isLoading]);
 
     const handleSubmit = () => {
-        if (!inputValue.trim()) return;
+        if (!inputValue.trim() || isLoading) return;
         if (onSubmit) {
             onSubmit(inputValue);
         }
@@ -12,25 +23,28 @@ const InputBar = ({ onSubmit }) => {
     };
 
     const handleKeyDown = (e) => {
-        if (e.key === 'Enter') {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
             handleSubmit();
         }
     };
 
     return (
         <div className="bg-gradient-to-t to-transparent">
-            <div className="max-w-3xl mx-auto relative group">
+            <div className={`max-w-3xl mx-auto relative group ${isLoading ? 'opacity-50 pointer-events-none' : ''}`}>
                 <div className="absolute -inset-0.5 bg-gradient-to-r from-zinc-300 to-zinc-400 dark:from-zinc-700 dark:to-zinc-800 chat-area opacity-10 group-hover:opacity-50 transition duration-500 blur"></div>
                 <div className="relative flex items-center bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-xl overflow-hidden chat-area">
 
                     {/* Input Field */}
                     <input
+                        ref={inputRef}
                         type="text"
                         value={inputValue}
                         onChange={(e) => setInputValue(e.target.value)}
                         onKeyDown={handleKeyDown}
-                        placeholder="Ask anything..."
-                        className="w-full bg-transparent text-black dark:text-white px-6 py-4 md:py-5 outline-none placeholder-zinc-400 dark:placeholder-zinc-500 text-lg"
+                        placeholder={isLoading ? "Generating response..." : "Ask anything..."}
+                        disabled={isLoading}
+                        className="w-full bg-transparent text-black dark:text-white px-6 py-4 md:py-5 outline-none placeholder-zinc-400 dark:placeholder-zinc-500 text-lg disabled:cursor-not-allowed"
                     />
 
                     {/* Action Buttons */}
@@ -39,6 +53,7 @@ const InputBar = ({ onSubmit }) => {
                         <button
                             className="p-2 text-zinc-400 hover:text-black dark:text-zinc-500 dark:hover:text-white transition-colors rounded-full hover:bg-black/5 dark:hover:bg-white/10"
                             title="Voice Input"
+                            disabled={isLoading}
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <line x1="12" y1="6" x2="12" y2="18"></line>
@@ -52,7 +67,8 @@ const InputBar = ({ onSubmit }) => {
                         {/* Submit Button */}
                         <button
                             onClick={handleSubmit}
-                            className="p-2 text-zinc-400 hover:text-black dark:text-zinc-500 dark:hover:text-white transition-colors rounded-full hover:bg-black/5 dark:hover:bg-white/10"
+                            disabled={isLoading}
+                            className={`p-2 transition-colors rounded-full hover:bg-black/5 dark:hover:bg-white/10 ${isLoading ? 'text-zinc-300 dark:text-zinc-600' : 'text-zinc-400 hover:text-black dark:text-zinc-500 dark:hover:text-white'}`}
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <line x1="12" y1="19" x2="12" y2="5"></line>

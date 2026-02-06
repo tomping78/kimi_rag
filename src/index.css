@@ -45,3 +45,43 @@
 .chat-area input {
   padding: 2rem !important
 }
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #f1f1f1;
+  /* gray-300 */
+  border-radius: 20px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+
+:root[class~="dark"] ::-webkit-scrollbar-thumb {
+  background-color: #000000;
+  /* zinc-600 */
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #f1f1f1;
+  /* gray-400 */
+}
+
+:root[class~="dark"] ::-webkit-scrollbar-thumb:hover {
+  background-color: #71717a;
+  /* zinc-500 */
+}
+
+/* Hide scrollbar buttons (arrows) */
+::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0;
+  height: 0;
+}
