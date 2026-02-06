@@ -15,13 +15,15 @@ const Hologram = () => {
         const cy = size / 2;
 
         let animationFrameId;
-        let time = 0;
+        let time = 0; // time in seconds
+        let lastTimestamp = null;
 
         // Configuration for the blobs
+        // `speed` is now in units of radians/phase-per-second (per-second rate)
         const blobs = [
-            { color: 'rgba(30, 58, 138, 0.4)', speed: 0.02, radius: 60, complexity: 3 }, // Blue 900
-            { color: 'rgba(37, 99, 235, 0.5)', speed: 0.03, radius: 55, complexity: 4 }, // Blue 600
-            { color: 'rgba(96, 165, 250, 0.3)', speed: 0.015, radius: 65, complexity: 2 }, // Blue 400
+            { color: 'rgba(30, 58, 138, 0.4)', speed: 1.2, radius: 60, complexity: 3 }, // ~0.02*60
+            { color: 'rgba(37, 99, 235, 0.5)', speed: 1.8, radius: 55, complexity: 4 }, // ~0.03*60
+            { color: 'rgba(96, 165, 250, 0.3)', speed: 0.9, radius: 65, complexity: 2 }, // ~0.015*60
         ];
 
         const drawBlob = (blob, t) => {
@@ -53,9 +55,16 @@ const Hologram = () => {
             ctx.fill();
         };
 
-        const animate = () => {
+        const animate = (timestamp) => {
+            if (!lastTimestamp) lastTimestamp = timestamp;
+            const deltaSeconds = (timestamp - lastTimestamp) / 500; // seconds since last frame
+            lastTimestamp = timestamp;
+
+            // Use real seconds for `time` (more intuitive). `blob.speed` is expressed
+            // as per-second rate, so we accumulate seconds directly.
+            time += deltaSeconds; // time is now in seconds
+
             ctx.clearRect(0, 0, size, size);
-            time += 1;
 
             // Use blend mode for "glowing/mixing" effect
             ctx.globalCompositeOperation = 'multiply'; // distinct layers in light mode
@@ -70,7 +79,7 @@ const Hologram = () => {
             animationFrameId = requestAnimationFrame(animate);
         };
 
-        animate();
+        animationFrameId = requestAnimationFrame(animate);
 
         // Cleanup function to prevent zombie loops
         return () => {
