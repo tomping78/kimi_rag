@@ -11,7 +11,7 @@ const Header = () => {
             {/* Logo Area */}
             <div className="text-xl font-bold tracking-tighter select-none">
                 <Link to="/" className="text-black dark:text-white logo flex items-center">
-                    <img src="../public/t-logo.png" alt="Logo" />
+                    <img src="./assets/t-logo.png" alt="Logo" />
                 </Link>
             </div>
 
