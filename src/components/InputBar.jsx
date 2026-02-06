@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import Tooltip from './Tooltip';
 
 const InputBar = ({ onSubmit, isLoading }) => {
     const [inputValue, setInputValue] = useState('');
@@ -33,7 +34,7 @@ const InputBar = ({ onSubmit, isLoading }) => {
         <div className="bg-gradient-to-t to-transparent">
             <div className={`max-w-3xl mx-auto relative group ${isLoading ? 'opacity-50 pointer-events-none' : ''}`}>
                 <div className="absolute -inset-0.5 bg-gradient-to-r from-zinc-300 to-zinc-400 dark:from-zinc-700 dark:to-zinc-800 chat-area opacity-10 group-hover:opacity-50 transition duration-500 blur"></div>
-                <div className="relative flex items-center bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-xl overflow-hidden chat-area">
+                <div className="relative flex items-center bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-xl chat-area">
 
                     {/* Input Field */}
                     <input
@@ -50,19 +51,20 @@ const InputBar = ({ onSubmit, isLoading }) => {
                     {/* Action Buttons */}
                     <div className="absolute right-5 flex items-center space-x-2">
                         {/* Voice Button */}
-                        <button
-                            className="p-2 text-zinc-400 hover:text-black dark:text-zinc-500 dark:hover:text-white transition-colors rounded-full hover:bg-black/5 dark:hover:bg-white/10"
-                            title="Voice Input"
-                            disabled={isLoading}
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <line x1="12" y1="6" x2="12" y2="18"></line>
-                                <line x1="16" y1="10" x2="16" y2="14"></line>
-                                <line x1="20" y1="12" x2="20" y2="12"></line>
-                                <line x1="8" y1="10" x2="8" y2="14"></line>
-                                <line x1="4" y1="12" x2="4" y2="12"></line>
-                            </svg>
-                        </button>
+                        <Tooltip text="음성 입력">
+                            <button
+                                className="p-2 text-zinc-400 hover:text-black dark:text-zinc-500 dark:hover:text-white transition-colors rounded-full hover:bg-black/5 dark:hover:bg-white/10"
+                                disabled={isLoading}
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <line x1="12" y1="6" x2="12" y2="18"></line>
+                                    <line x1="16" y1="10" x2="16" y2="14"></line>
+                                    <line x1="20" y1="12" x2="20" y2="12"></line>
+                                    <line x1="8" y1="10" x2="8" y2="14"></line>
+                                    <line x1="4" y1="12" x2="4" y2="12"></line>
+                                </svg>
+                            </button>
+                        </Tooltip>
 
                         {/* Submit Button */}
                         <button
