@@ -10,6 +10,9 @@ const MarkdownRenderer = ({ content, isStreaming }) => {
     const preprocessContent = (text) => {
         if (!text) return '';
 
+        // If the AI already used code blocks, assume it handled formatting correctly
+        if (text.includes('```')) return text;
+
         // Regex to find SQL-like patterns at the start of a line (or the whole text)
         // Modified to be EAGER: matches if it ends with ; OR if it's the end of the string ($).
         // This allows the "streaming" effect to show the code block immediately while typing.
@@ -31,7 +34,7 @@ const MarkdownRenderer = ({ content, isStreaming }) => {
                         const codeContent = String(children).replace(/\n$/, '');
 
                         // Force block rendering if NOT inline, even if no language match
-                        return !inline ? (
+                        return match ? (
                             <div className="rounded-md overflow-hidden my-4 shadow-sm syntax-box">
                                 {/* Optional: Header for code block could go here */}
                                 <SyntaxHighlighter
@@ -58,7 +61,7 @@ const MarkdownRenderer = ({ content, isStreaming }) => {
                                 />
                             </div>
                         ) : (
-                            <code {...props} className={`${className} bg-zinc-200 dark:bg-zinc-700 px-1 py-0.5 rounded text-sm font-mono text-pink-600 dark:text-pink-400`}>
+                            <code {...props} className={`${className} bg-zinc-200 dark:bg-zinc-700 px-1 py-0.5 rounded text-sm text-pink-600 dark:text-pink-400`}>
                                 {children}
                             </code>
                         );
