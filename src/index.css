@@ -119,3 +119,7 @@
 .streaming-result>.syntax-box:last-child div::after {
   vertical-align: text-bottom;
 }
+
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace, Inter, sans-serif !important;
+}

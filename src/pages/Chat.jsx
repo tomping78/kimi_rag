@@ -9,8 +9,11 @@ const Chat = () => {
     const [messages, setMessages] = useState([]);
     const [isStreaming, setIsStreaming] = useState(false);
     const bottomRef = useRef(null);
+    const scrollContainerRef = useRef(null);
     const hasInitialized = useRef(false);
     const [copiedId, setCopiedId] = useState(null);
+    const [canScrollUp, setCanScrollUp] = useState(false);
+    const [canScrollDown, setCanScrollDown] = useState(false);
 
     const handleCopy = async (text, id) => {
         try {
@@ -20,6 +23,36 @@ const Chat = () => {
         } catch (err) {
             console.error('Failed to copy text: ', err);
         }
+    };
+
+    // Check scroll position to toggle indicators
+    const checkScroll = () => {
+        const el = scrollContainerRef.current;
+        if (!el) return;
+
+        const { scrollTop, scrollHeight, clientHeight } = el;
+        // Use a small threshold (1px) to handle fractional pixels
+        // If content is scrollable (scrollHeight > clientHeight)
+        const isScrollable = scrollHeight > clientHeight;
+
+        if (isScrollable) {
+            setCanScrollUp(scrollTop > 10); // Show if scrolled down more than 10px
+            setCanScrollDown(scrollTop + clientHeight < scrollHeight - 10); // Show if not at very bottom
+        } else {
+            setCanScrollUp(false);
+            setCanScrollDown(false);
+        }
+    };
+
+    const scrollToTop = () => {
+        scrollContainerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const scrollToBottomDirect = () => {
+        bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+        // checkScroll will be triggered by the onScroll event, 
+        // but checking immediately after might be too early due to smooth scroll.
+        // The scroll event listener will handle the state update.
     };
 
     // Initial load handling
@@ -34,6 +67,29 @@ const Chat = () => {
         }
     }, [location.state]);
 
+    // Robust scroll checking using ResizeObserver
+    useEffect(() => {
+        const el = scrollContainerRef.current;
+        if (!el) return;
+
+        const handleResize = () => checkScroll();
+        const observer = new ResizeObserver(handleResize);
+
+        observer.observe(el);
+        // Also observe 'bottomRef' or just relies on key updates? 
+        // Observing text content changes is cleaner via the messages dependency below.
+
+        window.addEventListener('resize', handleResize);
+
+        // Initial check
+        checkScroll();
+
+        return () => {
+            observer.disconnect();
+            window.removeEventListener('resize', handleResize);
+        };
+    }, []);
+
     const addMessage = (text, sender) => {
         setMessages(prev => [...prev, { text, sender, id: Date.now() }]);
     };
@@ -45,6 +101,7 @@ const Chat = () => {
 
     const fetchResponse = async (userMessage) => {
         setIsStreaming(true);
+        const startTime = Date.now();
         // Add a placeholder message for AI
         const aiMessageId = Date.now() + 1;
         setMessages(prev => [...prev, { text: "...", sender: 'ai', id: aiMessageId, isStreaming: true }]);
@@ -82,8 +139,12 @@ const Chat = () => {
                 aiText = "죄송합니다. 답변을 불러올 수 없습니다.";
             }
 
+            // Calculate duration
+            const endTime = Date.now();
+            const duration = ((endTime - startTime) / 1000).toFixed(2);
+
             // Start typing simulation instead of setting text immediately
-            simulateTyping(aiText, aiMessageId);
+            simulateTyping(aiText, aiMessageId, duration);
 
         } catch (error) {
             console.error("Error fetching chat response:", error);
@@ -100,7 +161,7 @@ const Chat = () => {
         }
     };
 
-    const simulateTyping = (fullText, messageId) => {
+    const simulateTyping = (fullText, messageId, duration) => {
         let index = 0;
         let currentText = "";
 
@@ -135,6 +196,7 @@ const Chat = () => {
                     const targetMsg = newMessages.find(m => m.id === messageId);
                     if (targetMsg) {
                         targetMsg.isStreaming = false;
+                        if (duration) targetMsg.duration = duration;
                     }
                     return newMessages;
                 });
@@ -146,14 +208,34 @@ const Chat = () => {
         bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
     };
 
+    // Auto-scroll when messages change, but verify scroll state afterwards
     useEffect(() => {
         scrollToBottom();
+        // Allow DOM to update before checking scroll
+        setTimeout(checkScroll, 200);
     }, [messages]);
 
     return (
-        <div className="flex flex-col h-screen pt-20 pb-6 px-4 max-w-3xl mx-auto">
+        <div className="flex flex-col h-screen pt-20 pb-6 px-4 max-w-3xl mx-auto relative group">
+
+            {/* Scroll Up Indicator */}
+            <div className={`absolute top-24 left-1/2 transform -translate-x-1/2 z-50 transition-all duration-300 ${canScrollUp ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 -translate-y-4 pointer-events-none'}`}>
+                <button
+                    onClick={scrollToTop}
+                    className="bg-white/40 dark:bg-zinc-800/40 backdrop-blur-md p-2 rounded-full shadow-lg border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="18 15 12 9 6 15"></polyline>
+                    </svg>
+                </button>
+            </div>
+
             {/* Chat History */}
-            <div className="flex-1 overflow-y-auto space-y-6 pb-4">
+            <div
+                className="flex-1 overflow-y-auto space-y-6 pb-4 scroll-area"
+                ref={scrollContainerRef}
+                onScroll={checkScroll}
+            >
                 {messages.map((msg, idx) => (
                     <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
                         <div className={`rounded-2xl px-5 py-3 ${msg.sender === 'user'
@@ -164,6 +246,15 @@ const Chat = () => {
                                 <div className="font-bold text-sm mb-1 text-blue-600 dark:text-blue-400 flex items-center justify-between gap-2">
                                     <div className="flex items-center gap-2">
                                         KIMI
+                                        {msg.duration && (
+                                            <span className={`flex items-center gap-1 text-xs font-semibold ml-1 ${parseFloat(msg.duration) < 20 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-zinc-600 dark:text-zinc-400">
+                                                    <circle cx="12" cy="12" r="10"></circle>
+                                                    <polyline points="12 6 12 12 16 14"></polyline>
+                                                </svg>
+                                                {msg.duration}s
+                                            </span>
+                                        )}
                                         {msg.text === "..." && msg.isStreaming && (
                                             <svg className="animate-spin h-3 w-3 text-blue-600 dark:text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -206,6 +297,18 @@ const Chat = () => {
                     </div>
                 )}
                 <div ref={bottomRef} />
+            </div>
+
+            {/* Scroll Down Indicator */}
+            <div className={`absolute bottom-48 left-1/2 transform -translate-x-1/2 z-50 transition-all duration-300 ${canScrollDown ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-4 pointer-events-none'}`}>
+                <button
+                    onClick={scrollToBottomDirect}
+                    className="bg-white/40 dark:bg-zinc-800/40 backdrop-blur-md p-2 rounded-full shadow-lg border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </button>
             </div>
 
             <div className="mt-4">
