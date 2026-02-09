@@ -4,7 +4,6 @@ import Header from './components/Header';
 import { ThemeProvider } from './context/ThemeContext';
 import Home from './pages/Home';
 import Chat from './pages/Chat';
-import Chattt from './pages/chattt';
 
 function AppContent() {
   return (
@@ -18,7 +17,6 @@ function AppContent() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/chat" element={<Chat />} />
-          <Route path="/chattt" element={<Chattt />} />
         </Routes>
 
       </div>
