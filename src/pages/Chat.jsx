@@ -15,6 +15,9 @@ const Chat = () => {
     const [canScrollUp, setCanScrollUp] = useState(false);
     const [canScrollDown, setCanScrollDown] = useState(false);
 
+    const abortControllerRef = useRef(null);
+    const typingIntervalRef = useRef(null);
+
     const handleCopy = async (text, id) => {
         try {
             await navigator.clipboard.writeText(text);
@@ -23,6 +26,35 @@ const Chat = () => {
         } catch (err) {
             console.error('Failed to copy text: ', err);
         }
+    };
+
+    const handleStop = () => {
+        // Abort fetch request
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+            abortControllerRef.current = null;
+        }
+
+        // Clear typing interval
+        if (typingIntervalRef.current) {
+            clearInterval(typingIntervalRef.current);
+            typingIntervalRef.current = null;
+        }
+
+        setIsStreaming(false);
+
+        // Update the last message status
+        setMessages(prev => {
+            const newMessages = [...prev];
+            // Find the streaming message (usually the last one)
+            const streamingMsg = newMessages.find(m => m.isStreaming);
+            if (streamingMsg) {
+                streamingMsg.isStreaming = false;
+                // Optional: Indicate it was stopped
+                // streamingMsg.text += " (Stopped)"; 
+            }
+            return newMessages;
+        });
     };
 
     // Check scroll position to toggle indicators
@@ -100,6 +132,13 @@ const Chat = () => {
     };
 
     const fetchResponse = async (userMessage) => {
+        // Cancel any previous requests
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+        }
+        // Create new AbortController
+        abortControllerRef.current = new AbortController();
+
         setIsStreaming(true);
         const startTime = Date.now();
         // Add a placeholder message for AI
@@ -115,7 +154,8 @@ const Chat = () => {
                 },
                 body: JSON.stringify({
                     message: userMessage
-                })
+                }),
+                signal: abortControllerRef.current.signal
             });
 
             if (!response.ok) {
@@ -143,10 +183,17 @@ const Chat = () => {
             const endTime = Date.now();
             const duration = ((endTime - startTime) / 1000).toFixed(2);
 
+            // Prevent typing if stopped
+            if (!abortControllerRef.current) return;
+
             // Start typing simulation instead of setting text immediately
             simulateTyping(aiText, aiMessageId, duration);
 
         } catch (error) {
+            if (error.name === 'AbortError') {
+                console.log('Fetch aborted');
+                return;
+            }
             console.error("Error fetching chat response:", error);
             setMessages(prev => {
                 const newMessages = [...prev];
@@ -158,6 +205,8 @@ const Chat = () => {
                 return newMessages;
             });
             setIsStreaming(false);
+        } finally {
+            abortControllerRef.current = null;
         }
     };
 
@@ -175,7 +224,9 @@ const Chat = () => {
             return newMessages;
         });
 
-        const interval = setInterval(() => {
+        if (typingIntervalRef.current) clearInterval(typingIntervalRef.current);
+
+        typingIntervalRef.current = setInterval(() => {
             if (index < fullText.length) {
                 currentText += fullText[index];
                 setMessages(prev => {
@@ -189,7 +240,8 @@ const Chat = () => {
                 index++;
                 scrollToBottom();
             } else {
-                clearInterval(interval);
+                clearInterval(typingIntervalRef.current);
+                typingIntervalRef.current = null;
                 setIsStreaming(false);
                 setMessages(prev => {
                     const newMessages = [...prev];
@@ -260,6 +312,16 @@ const Chat = () => {
                                                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                             </svg>
+                                        )}
+                                        {/* Stop Button */}
+                                        {msg.isStreaming && (
+                                            <button
+                                                onClick={handleStop}
+                                                className="group flex items-center justify-center w-6 h-6 rounded-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 shadow-sm hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors focus:outline-none"
+                                                title="Stop generating"
+                                            >
+                                                <div className="w-2 h-2 bg-red-500 rounded-[1px] group-hover:bg-red-600 transition-colors"></div>
+                                            </button>
                                         )}
                                     </div>
                                     {!msg.isStreaming && (
