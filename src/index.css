@@ -1,0 +1,125 @@
+@import url('https://fonts.googleapis.com/css2?family=Titillium Web:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-background text-foreground font-sans antialiased overflow-x-hidden transition-colors duration-500;
+  }
+}
+
+.logo img {
+  width: 30px;
+}
+
+.main-title {
+  font-size: 3.5rem !important;
+  font-weight: 100 !important;
+  color: #888 !important;
+}
+
+:root[class~="dark"] .main-title {
+  color: #a1a1aa !important;
+  /* zinc-400 */
+}
+
+.main-title span {
+  font-weight: 700 !important;
+  color: #111 !important;
+}
+
+:root[class~="dark"] .main-title span {
+  color: #ffffff !important;
+}
+
+.sub-title {
+  font-weight: 100 !important;
+}
+
+.chat-area {
+  border-radius: 50px !important;
+}
+
+.chat-area textarea {
+  padding: 2rem 7rem 2rem 2rem !important
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #f1f1f1;
+  /* gray-300 */
+  border-radius: 20px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+
+:root[class~="dark"] ::-webkit-scrollbar-thumb {
+  background-color: #000000;
+  /* zinc-600 */
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #f1f1f1;
+  /* gray-400 */
+}
+
+:root[class~="dark"] ::-webkit-scrollbar-thumb:hover {
+  background-color: #71717a;
+  /* zinc-500 */
+}
+
+/* Hide scrollbar buttons (arrows) */
+::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0;
+  height: 0;
+}
+
+/* .syntax-box div {
+  background: #fff !important
+} */
+
+/* Blinking Cursor for Streaming */
+@keyframes cursor-blink {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0;
+  }
+}
+
+.streaming-result>*:not(.syntax-box):last-child::after,
+.streaming-result>.syntax-box:last-child div::after {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 16px;
+  background-color: #a1a1aa;
+  /* zinc-400 */
+  vertical-align: sub;
+  margin-left: 2px;
+  animation: cursor-blink 1s step-end infinite;
+}
+
+.streaming-result>.syntax-box:last-child div::after {
+  vertical-align: text-bottom;
+}
+
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "맑은 고딕", "Liberation Mono", "Courier New", monospace !important;
+}
