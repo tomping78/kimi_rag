@@ -317,7 +317,7 @@ const Chat = () => {
                                         {msg.isStreaming && (
                                             <button
                                                 onClick={handleStop}
-                                                className="group flex items-center justify-center w-6 h-6 rounded-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 shadow-sm hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors focus:outline-none"
+                                                className="group flex items-center justify-center w-5 h-5 rounded-full bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 shadow-sm hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors focus:outline-none"
                                                 title="Stop generating"
                                             >
                                                 <div className="w-2 h-2 bg-red-500 rounded-[1px] group-hover:bg-red-600 transition-colors"></div>
