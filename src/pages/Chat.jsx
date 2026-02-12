@@ -214,12 +214,13 @@ const Chat = () => {
         let index = 0;
         let currentText = "";
 
-        // Initial clear of the "..." placeholder
+        // Initial clear of the "..." placeholder and set duration
         setMessages(prev => {
             const newMessages = [...prev];
             const lastMsg = newMessages.find(m => m.id === messageId);
             if (lastMsg) {
                 lastMsg.text = "";
+                if (duration) lastMsg.duration = duration;
             }
             return newMessages;
         });
@@ -248,7 +249,6 @@ const Chat = () => {
                     const targetMsg = newMessages.find(m => m.id === messageId);
                     if (targetMsg) {
                         targetMsg.isStreaming = false;
-                        if (duration) targetMsg.duration = duration;
                     }
                     return newMessages;
                 });
